@@ -1,0 +1,4 @@
+NOTE: All values given in base 10 for convenience
+Degree 12 primitive polynomial used to create Galois Field: 7185
+Generator polynomial for m=12, t=4 for t error correcting BCH code = 457691335787729
+    Is a (4095, 4047) code (48 redundant bits)

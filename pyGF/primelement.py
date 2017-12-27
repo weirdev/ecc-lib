@@ -70,7 +70,7 @@ def minpoly(vector, gf):
     conj = conjugates(vector, gf)
     return polyproductmonicdeg1vectorpolys(conj, gf)
 
-def minpolyfactorvectterms(vector, gf):
+def minpolyrootvectterms(vector, gf):
     return conjugates(vector, gf)
 
 def polyproductmonicdeg1vectorpolys(vectorterms, gf):
@@ -109,10 +109,20 @@ def conjugates(vector, gf):
         return conj
     raise Exception("vector^(2^m) should == vector")
 
+def BCH_generatorpoly(t, gf):
+    genpolyrootterms = set()
+    # Add as roots the roots of the minimum polynomials of alpha^1, alpha^3, ..., alpha^(2*t-1)
+    for exp in range(1, 2*t, 2):
+        genpolyrootterms.update(minpolyrootvectterms(gf[exp + 1], gf))
+    return polyproductmonicdeg1vectorpolys(genpolyrootterms, gf)
+
 if __name__ == "__main__":
     pp12 = BinaryVector(12, 7185)
     pp5 = BinaryVector(5, 37)
+    pp6 = BinaryVector(6, 67)
     gf5 = make_GF(pp5)
+    gf6 = make_GF(pp6)
     #print(conjugates(BinaryVector(4, [0,0,0,1,0]), gf5))
     gf12 = make_GF(pp12)
-    print(minpolyfactorvectterms(BinaryVector(4, [0,0,0,1,0]), gf5))
+    #print(minpolyrootvectterms(BinaryVector(4, [0,0,0,1,0]), gf5))
+    print(int(BCH_generatorpoly(4, gf12)))

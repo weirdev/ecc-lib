@@ -121,6 +121,9 @@ class BinaryVector:
     def __hash__(self):
         return hash(tuple(self.coeff))
 
+    def __int__(self):
+        return bitlisttoint(self.coeff)
+
 def inttobitlist(x, bitlist=None):
     if bitlist == None:
         bitlist = list()
@@ -130,6 +133,11 @@ def inttobitlist(x, bitlist=None):
         return [0]
     bitlist.append(x % 2)
     return inttobitlist(x//2, bitlist)
+
+def bitlisttoint(bitlist, x=0, degree=0):
+    if len(bitlist) == 0:
+        return x
+    return bitlisttoint(bitlist[1:], x+(bitlist[0]*2**degree), degree + 1)
 
 if __name__ == "__main__":
     f1 = BinaryVector(2, [0, 0, 1])
