@@ -1,4 +1,6 @@
-from gfmath import BinaryVector
+from gfmath import BinaryVector, bitlisttoint, inttobitlist
+import numpy as np
+import scipy.linalg
 
 DEBUG = False
 
@@ -116,13 +118,70 @@ def BCH_generatorpoly(t, gf):
         genpolyrootterms.update(minpolyrootvectterms(gf[exp + 1], gf))
     return polyproductmonicdeg1vectorpolys(genpolyrootterms, gf)
 
+def generatormatrix(n, k, genpoly, systematic=True):
+    genmat = scipy.linalg.toeplitz([1]+[0]*(k-1), genpoly.coeff + [0]*(k-1))
+    if not systematic:
+        return genmat
+    else:
+        return reduce_echlonform(genmat)
+    
+def reduce_echlonform(echlonform_matrix):
+    matrix = echlonform_matrix
+    for column in range(1, min(matrix.shape)): # Each column that has an element on the main diagonal
+        for row in range(0, column):
+            if matrix[row, column]:
+                matrix[row] = matrix[row] ^ matrix[column]
+    return matrix
+
+def writegenmatrix(matrix, filename):
+    with open(filename, 'wb') as matrixfile:
+        matrixfile.write(matrix.shape[0].to_bytes(4, byteorder='big'))
+        matrixfile.write(matrix.shape[1].to_bytes(4, byteorder='big'))
+        columns = matrix.shape[1]
+        byteremainder = columns % 8
+        if byteremainder != 0:
+            z = np.zeros((matrix.shape[0], matrix.shape[1]+1), np.bool)
+            z[:,:-1] = matrix
+            matrix = z
+            columns += byteremainder
+        for row in matrix:
+            matrixfile.write(bytearray(bitlisttoint(row[bl*8:bl*8+8]) for bl in range(columns // 8)))
+        
+def readgenmatrix(filename):
+    with open(filename, 'rb') as matrixfile:
+        rows = int.from_bytes(matrixfile.read(4), byteorder='big')
+        columns = int.from_bytes(matrixfile.read(4), byteorder='big')
+        matrix = np.ndarray((rows, columns), np.bool)
+        paddedcols = columns
+        byteremainder = columns % 8
+        if columns % 8 != 0:
+            paddedcols += 8 - (columns % 8)
+        for row in matrix:
+            rbytes = matrixfile.read(paddedcols // 8)
+            for j, b in enumerate(rbytes):
+                if (j+1)*8 < columns:
+                    bits = inttobitlist(b)
+                    bits += [0] * (8-len(bits))
+                    row[j*8:(j+1)*8] = bits
+                else:
+                    bits = inttobitlist(b)
+                    bits += [0] * (byteremainder-len(bits))
+                    row[j*8:] = bits
+    return matrix
+
 if __name__ == "__main__":
     pp12 = BinaryVector(12, 7185)
-    pp5 = BinaryVector(5, 37)
+    #pp5 = BinaryVector(5, 37)
     pp6 = BinaryVector(6, 67)
-    gf5 = make_GF(pp5)
+    #gf5 = make_GF(pp5)
     gf6 = make_GF(pp6)
-    #print(conjugates(BinaryVector(4, [0,0,0,1,0]), gf5))
-    gf12 = make_GF(pp12)
-    #print(minpolyrootvectterms(BinaryVector(4, [0,0,0,1,0]), gf5))
-    print(int(BCH_generatorpoly(4, gf12)))
+    #gf12 = make_GF(pp12)
+    gp6 = BCH_generatorpoly(3, gf6)
+    #gp12 = BCH_generatorpoly(4, gf12)
+    #gm12 = generatormatrix(2**12 - 1, 2**12 - 1 - 48, gp12)
+    gm6 = generatormatrix(2**6 - 1, 2**6 - 1 - 18, gp6)
+
+    writegenmatrix(gm6, 'testmatrix')
+    rm = readgenmatrix("testmatrix")
+    print(rm)
+    print(True if np.array_equal(rm, gm6) else False)

@@ -1,5 +1,6 @@
 import math
 import binascii
+import numpy as np
 # Methods for performing polynomial arithmetic in GF(2^m)
 
 
@@ -14,6 +15,9 @@ class BinaryVector:
             elif isinstance(args[0], int):
                 self.m = args[0]
                 self.coeff = [0] * (self.m + 1)
+            elif hasattr(args[0], "__len__") and len(args[0]) > 0 and isinstance(args[0][0], np.integer):
+                self.coeff = args[0]
+                self.m = len(self.coeff) - 1
             else:
                 raise Exception()
         elif len(args) == 2:
@@ -124,20 +128,11 @@ class BinaryVector:
     def __int__(self):
         return bitlisttoint(self.coeff)
 
-def inttobitlist(x, bitlist=None):
-    if bitlist == None:
-        bitlist = list()
-    if x == 0:
-        if len(bitlist) > 0:
-            return bitlist
-        return [0]
-    bitlist.append(x % 2)
-    return inttobitlist(x//2, bitlist)
+def inttobitlist(x):
+    return [1 if digit=='1' else 0 for digit in bin(x)[2:][::-1]]
 
 def bitlisttoint(bitlist, x=0, degree=0):
-    if len(bitlist) == 0:
-        return x
-    return bitlisttoint(bitlist[1:], x+(bitlist[0]*2**degree), degree + 1)
+    return int(''.join('1' if b else '0' for b in bitlist[::-1]), 2)
 
 if __name__ == "__main__":
     f1 = BinaryVector(2, [0, 0, 1])
