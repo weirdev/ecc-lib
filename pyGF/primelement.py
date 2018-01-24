@@ -135,38 +135,41 @@ def reduce_echlonform(echlonform_matrix):
 
 def writegenmatrix(matrix, filename):
     with open(filename, 'wb') as matrixfile:
+        # num rows, num columns
         matrixfile.write(matrix.shape[0].to_bytes(4, byteorder='big'))
         matrixfile.write(matrix.shape[1].to_bytes(4, byteorder='big'))
-        columns = matrix.shape[1]
-        byteremainder = columns % 8
+
+        rows = matrix.shape[0]
+        byteremainder = rows % 8
+
         if byteremainder != 0:
-            z = np.zeros((matrix.shape[0], matrix.shape[1]+1), np.bool)
-            z[:,:-1] = matrix
+            z = np.zeros((matrix.shape[0] + byteremainder, matrix.shape[1]), np.bool)
+            z[:-byteremainder,:] = matrix
             matrix = z
-            columns += byteremainder
-        for row in matrix:
-            matrixfile.write(bytearray(bitlisttoint(row[bl*8:bl*8+8]) for bl in range(columns // 8)))
+            rows += byteremainder
+        for column in matrix.T:
+            matrixfile.write(bytearray(bitlisttoint(column[bl*8:bl*8+8]) for bl in range(rows // 8)))
         
 def readgenmatrix(filename):
     with open(filename, 'rb') as matrixfile:
         rows = int.from_bytes(matrixfile.read(4), byteorder='big')
         columns = int.from_bytes(matrixfile.read(4), byteorder='big')
         matrix = np.ndarray((rows, columns), np.bool)
-        paddedcols = columns
-        byteremainder = columns % 8
-        if columns % 8 != 0:
-            paddedcols += 8 - (columns % 8)
-        for row in matrix:
-            rbytes = matrixfile.read(paddedcols // 8)
-            for j, b in enumerate(rbytes):
-                if (j+1)*8 < columns:
+        paddedrows = rows
+        byteremainder = rows % 8
+        if rows % 8 != 0:
+            paddedrows += 8 - (rows % 8)
+        for column in matrix.T:
+            cbytes = matrixfile.read(paddedrows // 8)
+            for j, b in enumerate(cbytes):
+                if (j+1)*8 < rows:
                     bits = inttobitlist(b)
                     bits += [0] * (8-len(bits))
-                    row[j*8:(j+1)*8] = bits
+                    column[j*8:(j+1)*8] = bits
                 else:
                     bits = inttobitlist(b)
                     bits += [0] * (byteremainder-len(bits))
-                    row[j*8:] = bits
+                    column[j*8:] = bits
     return matrix
 
 if __name__ == "__main__":
@@ -179,6 +182,7 @@ if __name__ == "__main__":
     #gp6 = BCH_generatorpoly(3, gf6)
     gp12 = BCH_generatorpoly(4, gf12)
     gm12 = generatormatrix(2**12 - 1, 2**12 - 1 - 48, gp12)
+    print(gm12.shape)
     #gm6 = generatormatrix(2**6 - 1, 2**6 - 1 - 18, gp6)
 
     writegenmatrix(gm12, '4095_4047_matrix')
