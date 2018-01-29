@@ -1,6 +1,7 @@
 from gfmath import BinaryVector, bitlisttoint, inttobitlist
 import numpy as np
 import scipy.linalg
+import array
 
 DEBUG = False
 
@@ -133,59 +134,74 @@ def reduce_echlonform(echlonform_matrix):
                 matrix[row] = matrix[row] ^ matrix[column]
     return matrix
 
+"""
+bits = '100000001'
+padded_bits = bits + '0' * (8 - len(bits) % 8)
+padded_bits
+    '1000000010000000'
+list(int(padded_bits, 2).to_bytes(len(padded_bits) // 8, 'big'))
+    [128, 128]
+"""
+
 def writegenmatrix(matrix, filename):
     with open(filename, 'wb') as matrixfile:
         # num rows, num columns
-        matrixfile.write(matrix.shape[0].to_bytes(4, byteorder='big'))
-        matrixfile.write(matrix.shape[1].to_bytes(4, byteorder='big'))
+        matrixfile.write(matrix.shape[0].to_bytes(4, byteorder='little'))
+        matrixfile.write(matrix.shape[1].to_bytes(4, byteorder='little'))
 
         rows = matrix.shape[0]
-        byteremainder = rows % 8
+        byteremainder = 8 - (rows % 8)
 
-        if byteremainder != 0:
+        print("byteremainder", byteremainder)
+        if byteremainder != 8:
             z = np.zeros((matrix.shape[0] + byteremainder, matrix.shape[1]), np.bool)
             z[:-byteremainder,:] = matrix
             matrix = z
             rows += byteremainder
         for column in matrix.T:
             matrixfile.write(bytearray(bitlisttoint(column[bl*8:bl*8+8]) for bl in range(rows // 8)))
+            # ###In column[bl*8:bl*8+8][::-1], the [::-1]
         
 def readgenmatrix(filename):
     with open(filename, 'rb') as matrixfile:
-        rows = int.from_bytes(matrixfile.read(4), byteorder='big')
-        columns = int.from_bytes(matrixfile.read(4), byteorder='big')
+        rows = int.from_bytes(matrixfile.read(4), byteorder='little')
+        columns = int.from_bytes(matrixfile.read(4), byteorder='little')
         matrix = np.ndarray((rows, columns), np.bool)
         paddedrows = rows
-        byteremainder = rows % 8
+        byteremainder = 8 - (rows % 8)
+        print("byteremainder", byteremainder)
         if rows % 8 != 0:
-            paddedrows += 8 - (rows % 8)
+            paddedrows += byteremainder
         for column in matrix.T:
             cbytes = matrixfile.read(paddedrows // 8)
-            for j, b in enumerate(cbytes):
+            for j, byte in enumerate(cbytes):
                 if (j+1)*8 < rows:
-                    bits = inttobitlist(b)
+                    bits = inttobitlist(byte)
                     bits += [0] * (8-len(bits))
                     column[j*8:(j+1)*8] = bits
                 else:
-                    bits = inttobitlist(b)
-                    bits += [0] * (byteremainder-len(bits))
+                    bits = inttobitlist(byte)
+                    bits += [0] * (8-byteremainder-len(bits))
                     column[j*8:] = bits
     return matrix
 
 if __name__ == "__main__":
-    pp12 = BinaryVector(12, 7185)
+    #pp12 = BinaryVector(12, 7185)
     #pp5 = BinaryVector(5, 37)
-    #pp6 = BinaryVector(6, 67)
+    pp6 = BinaryVector(6, 67)
     #gf5 = make_GF(pp5)
-    #gf6 = make_GF(pp6)
-    gf12 = make_GF(pp12)
-    #gp6 = BCH_generatorpoly(3, gf6)
-    gp12 = BCH_generatorpoly(4, gf12)
-    gm12 = generatormatrix(2**12 - 1, 2**12 - 1 - 48, gp12)
-    print(gm12.shape)
-    #gm6 = generatormatrix(2**6 - 1, 2**6 - 1 - 18, gp6)
-
-    writegenmatrix(gm12, '4095_4047_matrix')
-    rm = readgenmatrix("4095_4047_matrix")
+    gf6 = make_GF(pp6)
+    #gf12 = make_GF(pp12)
+    gp6 = BCH_generatorpoly(3, gf6)
+    #gp12 = BCH_generatorpoly(4, gf12)
+    #gm12 = generatormatrix(2**12 - 1, 2**12 - 1 - 48, gp12)
+    #print(gm12.shape)
+    gm6 = generatormatrix(2**6 - 1, 2**6 - 1 - 18, gp6)
+    print(gm6)
+    writegenmatrix(gm6, 'test6mat')
+    rm = readgenmatrix("test6mat")
     print(rm)
-    print(True if np.array_equal(rm, gm12) else False)
+    #writegenmatrix(gm12, '4095_4047_matrix')
+    #rm = readgenmatrix("4095_4047_matrix")
+    print(rm)
+    print(True if np.array_equal(rm, gm6) else False)

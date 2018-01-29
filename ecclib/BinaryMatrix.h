@@ -1,21 +1,33 @@
 #pragma once
 
+#ifndef BINARYMATRIX_H
+#define BINARYMATRIX_H
+#include "ecclib.h"
 #include <string>
+#include <fstream>
+#include <iterator>
+#include <vector>
+#include <iostream>
+#endif
 
-class BinaryMatrix
+
+namespace EccLib
 {
-public:
-	int rows;
-	int columns;
+	class BinaryMatrix
+	{
+	public:
+		int rows;
+		int columns;
 
-	BinaryMatrix Load(std::string file);
+		static ECCLIB_API BinaryMatrix Load(std::string file);
 
-	const unsigned char* MultiplyVector(const unsigned char* data);
+		unsigned char* MultiplyVector(unsigned char* data);
+		bool ECCLIB_API GetElement(int row, int column);
 
-private:
-	BinaryMatrix(int rows, int columns);
+	private:
+		BinaryMatrix(int rows, int columns);
 
-	int _memrows;
-	int _memcolumns;
-	unsigned char** _matrix;
-};
+		int _memrows;
+		unsigned char** _matrix;
+	};
+}

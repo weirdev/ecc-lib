@@ -6,6 +6,11 @@
 #define ECCLIB_API __declspec(dllimport)
 #endif
 
+#ifndef ECCLIB_H
+#define ECCLIB_H
+#include "BinaryMatrix.h"
+#endif
+
 
 namespace EccLib
 {
