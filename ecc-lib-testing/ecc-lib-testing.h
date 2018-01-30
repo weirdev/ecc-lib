@@ -13,4 +13,5 @@ int main();
 void testdummyencode();
 std::vector<unsigned char> randomdata(int len);
 void comparearrays(unsigned char* v1, unsigned char* v2, unsigned int size);
-void testload_4095_4047_matrix();
+void testload_matrix();
+void test_matrix_encode();

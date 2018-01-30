@@ -15,9 +15,6 @@ namespace EccLib
 	// _matrix is defined as an array of columns, not rows
 	BinaryMatrix::BinaryMatrix(int r, int c)
 	{
-		std::cout << r << std::endl;
-		int s;
-		std::cin >> s;
 		this->rows = r;
 		this->columns = c;
 
@@ -47,14 +44,12 @@ namespace EccLib
 		{
 			r = (r << 8) | buffer[idx];
 		}
-		std::cout << "r " << r << std::endl;
 		int c = 0;
 		idx = 7;
 		for (; idx >= 4; idx--)
 		{
 			c = (c << 8) | buffer[idx];
 		}
-		std::cout << "c " << c << std::endl;
 		BinaryMatrix bm = BinaryMatrix(r, c);
 		idx = 8;
 		for (int i=0; i < bm.columns; i++)
@@ -71,12 +66,69 @@ namespace EccLib
 	bool BinaryMatrix::GetElement(int row, int column)
 	{
 		unsigned char cell = this->_matrix[column][(int)row / 8];
-		std::cout << "cell " << (int)cell << std::endl;
 		return (cell & (1 << (row % 8))) != 0;
 	}
 
+	// Left multiplies an array of data, length of `data` must be equal to _memrows
+	// Returns array of bytes of length large enough to hold `columns` bits
 	unsigned char* BinaryMatrix::MultiplyVector(unsigned char* data)
 	{
-		return data;
+		int lenbytes = (int)this->columns / 8;
+		int remainingbits = this->columns % 8;
+		if (remainingbits != 0)
+		{
+			lenbytes++;
+		}
+		unsigned char* product = new unsigned char[lenbytes];
+		unsigned char newbyte = 0;
+		for (int i = 0; i < this->columns; i++)
+		{
+			unsigned char* column = this->_matrix[i];
+			// Calculate dotproduct of column and data
+			unsigned char* bytesums = AND_ByteArrays(data, column, this->_memrows);
+			unsigned char bytesum = XOR_Bytes(bytesums, this->rows);
+			delete[] bytesums;
+			// Find bit sum (http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel)
+			bytesum ^= bytesum >> 4;
+			bytesum &= 0xf;
+			newbyte = newbyte | (((0x6996 >> bytesum) & 1) << (i % 8)); // 0x6996 is a magic numer that functions as a lookup table for the correct parity bit of bytesum
+			if ((i+1) % 8 == 0)
+			{
+				product[(int)i / 8] = newbyte;
+				newbyte = 0;
+			}
+		}
+		if (remainingbits != 0)
+		{
+			product[lenbytes - 1] = newbyte;
+		}
+		return product;
 	}
+
+	unsigned char* BinaryMatrix::AND_ByteArrays(unsigned char* x, unsigned char* y, int bytecount)
+	{
+		unsigned char* sum = new unsigned char[bytecount];
+		for (int i = 0; i < bytecount; i++)
+		{
+			sum[i] = x[i] & y[i];
+		}
+		return sum;
+	}
+
+	unsigned char BinaryMatrix::XOR_Bytes(unsigned char* x, int bitcount)
+	{
+		unsigned char sum = 0;
+		for (int i = 0; i < (int)bitcount/8; i++)
+		{
+			sum ^= x[i];
+		}
+		unsigned char bitremainder = bitcount % 8;
+		if (bitremainder != 0)
+		{
+			sum ^= (x[(int)bitcount / 8] << (8 - bitremainder)) >> (8 - bitremainder);
+		}
+		return sum;
+	}
+
+
 }
