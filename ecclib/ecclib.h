@@ -24,7 +24,10 @@ namespace EccLib
 	class BCH
 	{
 	public:
-		static ECCLIB_API void Encode(unsigned char data[506], unsigned char encoded[512]);
-		static ECCLIB_API void Decode(unsigned char data[512], unsigned char decoded[506]);
+		ECCLIB_API BCH();
+		ECCLIB_API void Encode(unsigned char data[506], unsigned char encoded[512]);
+		ECCLIB_API void Decode(unsigned char data[512], unsigned char decoded[506]);
+	private:
+		BinaryMatrix* _generatormatrix;
 	};
 }
