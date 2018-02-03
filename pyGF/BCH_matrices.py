@@ -1,77 +1,11 @@
-from gfmath import BinaryVector, bitlisttoint, inttobitlist
+from binary_math import BinaryVector, bitlisttoint, inttobitlist
+from gf import GaloisField
 import numpy as np
 import scipy.linalg
 import array
+import sys
 
 DEBUG = False
-
-def findprimelements(m):
-    primeles = []
-    e = BinaryVector(m, 2)
-    i = 2
-    while i < 2**(m+1):
-        if is_primitive_element:
-                primeles.append(e)
-        i += 1
-        e = e.addwithcarry(1)
-    return primeles
-
-def is_primitive_element(e):
-    return irreducible(e) and divides_pow_x_n_m1(e)
-
-def divides_pow_x_n_m1(e):
-    unity = BinaryVector(e.m, 1)
-    checkorder = 1
-    remainder = unity
-
-    while checkorder < 2**e.m - 1:
-        ccp = BinaryVector(checkorder)
-        ccp.coeff[0] = ccp.coeff[-1] = 1
-        remainder = ccp % e
-        if DEBUG:
-            print("CO", checkorder)
-            print("Rem", remainder)
-            print("CCP", ccp)
-            print("E", e)
-        if remainder.iszero():
-            return False
-        checkorder += 1
-    ccp = BinaryVector(checkorder)
-    ccp.coeff[0] = ccp.coeff[-1] = 1
-    remainder = ccp % e
-    if DEBUG:
-        print("CO", checkorder)
-        print("Rem", remainder)
-        print("CCP", ccp)
-        print("E", e)
-    return remainder.iszero()
-
-def irreducible(e):
-    div = BinaryVector(e.degree, 2)
-    while div.degree < e.degree:
-        if (e % div).iszero():
-            return str(div), str(e % div)
-        div = div.addwithcarry(1)
-    return True
-
-def make_GF(primitive_polynomial):
-    m = primitive_polynomial.m
-    GF = []
-    GF.append(BinaryVector(m - 1))
-    for i in range(m):
-        GF.append(BinaryVector(m - 1, 2**i))
-    GF.append(BinaryVector(m-1, primitive_polynomial.coeff[:-1]))
-    for i in range(2**m-m-2):
-        powm = GF[-1].coeff[-1] == 1
-        new = GF[-1] >> 1
-        if powm:
-            new += GF[m+1]
-        GF.append(new)
-    return GF
-
-def minpoly(vector, gf):
-    conj = conjugates(vector, gf)
-    return polyproductmonicdeg1vectorpolys(conj, gf)
 
 def minpolyrootvectterms(vector, gf):
     return conjugates(vector, gf)
@@ -152,7 +86,6 @@ def writegenmatrix(matrix, filename):
         rows = matrix.shape[0]
         byteremainder = 8 - (rows % 8)
 
-        print("byteremainder", byteremainder)
         if byteremainder != 8:
             z = np.zeros((matrix.shape[0] + byteremainder, matrix.shape[1]), np.bool)
             z[:-byteremainder,:] = matrix
@@ -169,7 +102,6 @@ def readgenmatrix(filename):
         matrix = np.ndarray((rows, columns), np.bool)
         paddedrows = rows
         byteremainder = 8 - (rows % 8)
-        print("byteremainder", byteremainder)
         if rows % 8 != 0:
             paddedrows += byteremainder
         for column in matrix.T:
@@ -186,22 +118,25 @@ def readgenmatrix(filename):
     return matrix
 
 if __name__ == "__main__":
-    pp12 = BinaryVector(12, 7185)
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "test" or sys.argv[1] == "6":
+            pp6 = BinaryVector(6, 67)
+            gf6 = GaloisField(pp6)
+            gp6 = BCH_generatorpoly(3, gf6)
+            gm6 = generatormatrix(2**6 - 1, 2**6 - 1 - 18, gp6)
+            writegenmatrix(gm6, 'test6mat')
+            #rm = readgenmatrix("test6mat")
+            #print(True if np.array_equal(rm, gm6) else False)
+        elif sys.argv[1] == "large" or sys.argv[1] == "12":
+            pp12 = BinaryVector(12, 7185)
+            gf12 = GaloisField(pp12)
+            gp12 = BCH_generatorpoly(4, gf12)
+            gm12 = generatormatrix(2**12 - 1, 2**12 - 1 - 48, gp12)
+            writegenmatrix(gm12, '4095_4047_matrix')
+            #rm = readgenmatrix("4095_4047_matrix")
+            #print(True if np.array_equal(rm, gm12) else False)
+    else:
+        print("Missing required argument")
+
     #pp5 = BinaryVector(5, 37)
-    #pp6 = BinaryVector(6, 67)
     #gf5 = make_GF(pp5)
-    #gf6 = make_GF(pp6)
-    gf12 = make_GF(pp12)
-    #gp6 = BCH_generatorpoly(3, gf6)
-    gp12 = BCH_generatorpoly(4, gf12)
-    gm12 = generatormatrix(2**12 - 1, 2**12 - 1 - 48, gp12)
-    #print(gm12.shape)
-    #gm6 = generatormatrix(2**6 - 1, 2**6 - 1 - 18, gp6)
-    #print(gm6)
-    #writegenmatrix(gm6, 'test6mat')
-    #rm = readgenmatrix("test6mat")
-    #print(rm)
-    writegenmatrix(gm12, '4095_4047_matrix')
-    rm = readgenmatrix("4095_4047_matrix")
-    print(rm)
-    print(True if np.array_equal(rm, gm12) else False)
