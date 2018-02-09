@@ -4,6 +4,7 @@ import numpy as np
 import scipy.linalg
 import array
 import sys
+import operator
 
 DEBUG = False
 
@@ -53,7 +54,7 @@ def BCH_generatorpoly(t, gf):
         genpolyrootterms.update(minpolyrootvectterms(gf[exp + 1], gf))
     return polyproductmonicdeg1vectorpolys(genpolyrootterms, gf)
 
-def generatormatrix(n, k, genpoly, systematic=True):
+def BCH_generatormatrix(n, k, genpoly, systematic=True):
     genmat = scipy.linalg.toeplitz([1]+[0]*(k-1), genpoly.coeff + [0]*(k-1))
     if not systematic:
         return genmat
@@ -117,13 +118,43 @@ def readgenmatrix(filename):
                     column[j*8:] = bits
     return matrix
 
+def writeparitycheckmatrix(matrix, m, filename):
+    with open(filename, 'wb') as matrixfile:
+        # num rows, num columns
+        matrixfile.write(matrix.shape[0].to_bytes(4, byteorder='little'))
+        matrixfile.write(matrix.shape[1].to_bytes(4, byteorder='little'))
+        # m = number of bits per matrix element
+        matrixfile.write(m.to_bytes(4, byteorder='little'))
+
+        bitcolumns = m*matrix.shape[1]
+        byteremainder = (8 - (bitcolumns % 8)) % 8
+
+        bitmatrix = np.zeros((matrix.shape[0], bitcolumns+byteremainder), np.bool)
+        for i, row in enumerate(matrix):
+            bitrow = []
+            for gfcolumn in row:
+                bitrow.extend(gfcolumn.coeff)
+            bitmatrix[i][:bitcolumns] = bitrow
+
+        for row in bitmatrix:
+            matrixfile.write(bytearray(bitlisttoint(row[bl*8:bl*8+8]) for bl in range((bitcolumns+byteremainder) // 8)))
+
+def BCH_paritycheckmatrix(gf, m, t):
+    # Each element of the parity check matrix (H) is a BinaryVector
+    # Representing an element of GF(2^m)
+    def H_fromlocation(y , x):
+        return gf[((y+1)*x)%(2**m-1)+1]
+    
+    return np.fromfunction(np.vectorize(H_fromlocation), (2*t, 2**m-1), dtype=np.int)
+
+
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         if sys.argv[1] == "test" or sys.argv[1] == "6":
             pp6 = BinaryVector(6, 67)
             gf6 = GaloisField(pp6)
             gp6 = BCH_generatorpoly(3, gf6)
-            gm6 = generatormatrix(2**6 - 1, 2**6 - 1 - 18, gp6)
+            gm6 = BCH_generatormatrix(2**6 - 1, 2**6 - 1 - 18, gp6)
             writegenmatrix(gm6, 'test6mat')
             #rm = readgenmatrix("test6mat")
             #print(True if np.array_equal(rm, gm6) else False)
@@ -131,10 +162,17 @@ if __name__ == "__main__":
             pp12 = BinaryVector(12, 7185)
             gf12 = GaloisField(pp12)
             gp12 = BCH_generatorpoly(4, gf12)
-            gm12 = generatormatrix(2**12 - 1, 2**12 - 1 - 48, gp12)
+            gm12 = BCH_generatormatrix(2**12 - 1, 2**12 - 1 - 48, gp12)
             writegenmatrix(gm12, '4095_4047_matrix')
             #rm = readgenmatrix("4095_4047_matrix")
             #print(True if np.array_equal(rm, gm12) else False)
+        elif sys.argv[1] == "Htest" or sys.argv[1] == "H6":
+            pp6 = BinaryVector(6, 67)
+            gf6 = GaloisField(pp6)
+            H6 = BCH_paritycheckmatrix(gf6, 6, 3)
+            writeparitycheckmatrix(H6, 6, "pc6mat")
+        else:
+            print("Unknown parameter name \"{}\"".format(sys.argv[1]))
     else:
         print("Missing required argument")
 
