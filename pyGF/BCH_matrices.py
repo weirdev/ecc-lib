@@ -118,6 +118,14 @@ def readgenmatrix(filename):
                     column[j*8:] = bits
     return matrix
 
+def BCH_paritycheckmatrix(gf, m, t):
+    # Each element of the parity check matrix (H) is a BinaryVector
+    # Representing an element of GF(2^m)
+    def H_fromlocation(y , x):
+        return gf[((y+1)*x)%(2**m-1)+1]
+    
+    return np.fromfunction(np.vectorize(H_fromlocation), (2*t, 2**m-1), dtype=np.int)
+
 def writeparitycheckmatrix(matrix, m, filename):
     with open(filename, 'wb') as matrixfile:
         # num rows, num columns
@@ -139,14 +147,29 @@ def writeparitycheckmatrix(matrix, m, filename):
         for row in bitmatrix:
             matrixfile.write(bytearray(bitlisttoint(row[bl*8:bl*8+8]) for bl in range((bitcolumns+byteremainder) // 8)))
 
-def BCH_paritycheckmatrix(gf, m, t):
-    # Each element of the parity check matrix (H) is a BinaryVector
-    # Representing an element of GF(2^m)
-    def H_fromlocation(y , x):
-        return gf[((y+1)*x)%(2**m-1)+1]
-    
-    return np.fromfunction(np.vectorize(H_fromlocation), (2*t, 2**m-1), dtype=np.int)
+def readparitycheckmatrix(filename):
+    with open(filename, 'rb') as matrixfile:
+        rows = int.from_bytes(matrixfile.read(4), byteorder='little')
+        columns = int.from_bytes(matrixfile.read(4), byteorder='little')
+        m = int.from_bytes(matrixfile.read(4), byteorder='little')
+        matrix = np.ndarray((rows, columns), BinaryVector)
 
+        bitcolumns = m*columns
+        byteremainder = (8 - (bitcolumns % 8)) % 8
+
+        for row in matrix:
+            rbytes = matrixfile.read((bitcolumns + byteremainder) // 8)
+            col = 0
+            newgfelementbuf = []
+            for byte in rbytes:
+                bits = inttobitlist(byte)
+                bits += [0] * (8-len(bits))
+                newgfelementbuf.extend(bits)
+                while col < columns and len(newgfelementbuf) >= m:
+                    row[col] = BinaryVector(m-1, newgfelementbuf[:m])
+                    col += 1
+                    newgfelementbuf = newgfelementbuf[m:]
+        return matrix
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
@@ -171,6 +194,15 @@ if __name__ == "__main__":
             gf6 = GaloisField(pp6)
             H6 = BCH_paritycheckmatrix(gf6, 6, 3)
             writeparitycheckmatrix(H6, 6, "pc6mat")
+            #rm = readparitycheckmatrix("pc6mat")
+            #print(True if np.array_equal(rm, H6) else False)
+        elif sys.argv[1] == "Hlarge" or sys.argv[1] == "H12":
+            pp12 = BinaryVector(12, 7185)
+            gf12 = GaloisField(pp12)
+            H12 = BCH_paritycheckmatrix(gf12, 12, 4)
+            writeparitycheckmatrix(H12, 12, "4095_4047_check_matrix")
+            #rm = readparitycheckmatrix("pc6mat")
+            #print(True if np.array_equal(rm, H6) else False)
         else:
             print("Unknown parameter name \"{}\"".format(sys.argv[1]))
     else:
