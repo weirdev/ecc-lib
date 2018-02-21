@@ -124,9 +124,15 @@ def BCH_paritycheckmatrix(gf, m, t):
     def H_fromlocation(y , x):
         return gf[((y+1)*x)%(2**m-1)+1]
     
-    return np.fromfunction(np.vectorize(H_fromlocation), (2*t, 2**m-1), dtype=np.int)
+    return np.fromfunction(np.vectorize(H_fromlocation), (2*t, 2**m-1), dtype=BinaryVector)
 
 def writeparitycheckmatrix(matrix, m, filename):
+    def gfelementtobytes(e):
+        byteremainder = (8 - (e.m+1) % 8) % 8
+        bits = e.coeff + [0] * byteremainder
+        return bytearray(bitlisttoint(e.coeff[bl*8:bl*8+8]) for bl in range(len(bits) // 8))
+        
+
     with open(filename, 'wb') as matrixfile:
         # num rows, num columns
         matrixfile.write(matrix.shape[0].to_bytes(4, byteorder='little'))
@@ -134,41 +140,30 @@ def writeparitycheckmatrix(matrix, m, filename):
         # m = number of bits per matrix element
         matrixfile.write(m.to_bytes(4, byteorder='little'))
 
-        bitcolumns = m*matrix.shape[1]
-        byteremainder = (8 - (bitcolumns % 8)) % 8
-
-        bitmatrix = np.zeros((matrix.shape[0], bitcolumns+byteremainder), np.bool)
-        for i, row in enumerate(matrix):
-            bitrow = []
-            for gfcolumn in row:
-                bitrow.extend(gfcolumn.coeff)
-            bitmatrix[i][:bitcolumns] = bitrow
-
-        for row in bitmatrix:
-            matrixfile.write(bytearray(bitlisttoint(row[bl*8:bl*8+8]) for bl in range((bitcolumns+byteremainder) // 8)))
+        for row in matrix:
+            for element in row:
+                matrixfile.write(gfelementtobytes(element))
 
 def readparitycheckmatrix(filename):
+    def bytestogfelement(bs, m):
+        coeffs = []
+        for b in bs:
+            bl = inttobitlist(b)
+            coeffs.extend(bl)
+            coeffs.extend([0]*(8-len(bl)))
+        return BinaryVector(m-1, coeffs[:m])
+
     with open(filename, 'rb') as matrixfile:
         rows = int.from_bytes(matrixfile.read(4), byteorder='little')
         columns = int.from_bytes(matrixfile.read(4), byteorder='little')
         m = int.from_bytes(matrixfile.read(4), byteorder='little')
         matrix = np.ndarray((rows, columns), BinaryVector)
 
-        bitcolumns = m*columns
-        byteremainder = (8 - (bitcolumns % 8)) % 8
+        bytesperelement = (m + ((8 - m % 8) % 8)) // 8
 
-        for row in matrix:
-            rbytes = matrixfile.read((bitcolumns + byteremainder) // 8)
-            col = 0
-            newgfelementbuf = []
-            for byte in rbytes:
-                bits = inttobitlist(byte)
-                bits += [0] * (8-len(bits))
-                newgfelementbuf.extend(bits)
-                while col < columns and len(newgfelementbuf) >= m:
-                    row[col] = BinaryVector(m-1, newgfelementbuf[:m])
-                    col += 1
-                    newgfelementbuf = newgfelementbuf[m:]
+        for r in range(rows):
+            for c in range(columns):
+                matrix[r][c] = bytestogfelement(matrixfile.read(bytesperelement), m)
         return matrix
 
 if __name__ == "__main__":
@@ -194,15 +189,16 @@ if __name__ == "__main__":
             gf6 = GaloisField(pp6)
             H6 = BCH_paritycheckmatrix(gf6, 6, 3)
             writeparitycheckmatrix(H6, 6, "pc6mat")
-            #rm = readparitycheckmatrix("pc6mat")
-            #print(True if np.array_equal(rm, H6) else False)
+            rm = readparitycheckmatrix("pc6mat")
+            print(rm)
+            print(True if np.array_equal(rm, H6) else False)
         elif sys.argv[1] == "Hlarge" or sys.argv[1] == "H12":
             pp12 = BinaryVector(12, 7185)
             gf12 = GaloisField(pp12)
             H12 = BCH_paritycheckmatrix(gf12, 12, 4)
             writeparitycheckmatrix(H12, 12, "4095_4047_check_matrix")
-            #rm = readparitycheckmatrix("pc6mat")
-            #print(True if np.array_equal(rm, H6) else False)
+            rm = readparitycheckmatrix("4095_4047_check_matrix")
+            print(True if np.array_equal(rm, H12) else False)
         else:
             print("Unknown parameter name \"{}\"".format(sys.argv[1]))
     else:
