@@ -1,13 +1,6 @@
 #include "stdafx.h"
 #include "BinaryMatrix.h"
 
-// Dont use bitset -- offers poor sequential access
-// ~2MB to store matrix in bytes containing 8 bits of data each
-// ~16MB to store matrix with each bit in its own byte
-// Start by implementing with compressed storage
-// Need to decide on internal data structure, single array or array of arrays
-// Leaning to array of arrays
-
 namespace EccLib
 {
 	// TODO: Handle systems with non 8-bit words
@@ -37,7 +30,6 @@ namespace EccLib
 		std::vector<unsigned char> buffer((
 			std::istreambuf_iterator<char>(input)),
 			(std::istreambuf_iterator<char>()));
-		
 		int r = 0;
 		int idx = 3;
 		for (; idx >= 0; idx--)

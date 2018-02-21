@@ -8,8 +8,8 @@
 #include <iterator>
 #include <vector>
 #include <iostream>
-#endif
 
+#pragma message("jjBinaryMatrix")
 
 namespace EccLib
 {
@@ -34,3 +34,6 @@ namespace EccLib
 		static unsigned char XOR_Bytes(unsigned char* x, int bitcount);
 	};
 }
+
+
+#endif

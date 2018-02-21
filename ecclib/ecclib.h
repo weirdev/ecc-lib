@@ -8,12 +8,12 @@
 
 #ifndef ECCLIB_H
 #define ECCLIB_H
-#include "BinaryMatrix.h"
-#endif
-
 
 namespace EccLib
 {
+	class BinaryMatrix;
+	class GFMatrix;
+
 	class Functions
 	{
 	public:
@@ -31,3 +31,6 @@ namespace EccLib
 		BinaryMatrix* _generatormatrix;
 	};
 }
+
+
+#endif
