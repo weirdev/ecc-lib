@@ -18,3 +18,5 @@ void comparearrays(unsigned char* v1, unsigned char* v2, unsigned int size);
 void testload_matrix();
 void test_matrix_encode();
 void testload_gfmatrix();
+void test_BCH_Encode();
+void test_BCH_Decode(bool small=true);

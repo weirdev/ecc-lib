@@ -23,7 +23,7 @@ namespace EccLib
 		}
 	}
 
-	BinaryMatrix BinaryMatrix::Load(std::string file)
+	BinaryMatrix* BinaryMatrix::Load(std::string file)
 	{
 		std::ifstream input(file, std::ios::binary);
 		// copies all data into buffer
@@ -42,13 +42,13 @@ namespace EccLib
 		{
 			c = (c << 8) | buffer[idx];
 		}
-		BinaryMatrix bm = BinaryMatrix(r, c);
+		BinaryMatrix* bm = new BinaryMatrix(r, c);
 		idx = 8;
-		for (int i=0; i < bm.columns; i++)
+		for (int i=0; i < bm->columns; i++)
 		{
-			for (int j = 0; j < bm._memrows; j++)
+			for (int j = 0; j < bm->_memrows; j++)
 			{
-				bm._matrix[i][j] = buffer[idx];
+				bm->_matrix[i][j] = buffer[idx];
 				idx++;
 			}
 		}

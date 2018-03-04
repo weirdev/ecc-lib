@@ -9,6 +9,8 @@
 #ifndef ECCLIB_H
 #define ECCLIB_H
 
+#include <string>
+
 namespace EccLib
 {
 	class BinaryMatrix;
@@ -24,11 +26,19 @@ namespace EccLib
 	class BCH
 	{
 	public:
-		ECCLIB_API BCH();
-		ECCLIB_API void Encode(unsigned char data[506], unsigned char encoded[512]);
-		ECCLIB_API void Decode(unsigned char data[512], unsigned char decoded[506]);
+		ECCLIB_API BCH(std::string generatormatrixfile, std::string paritycheckmatrixfile, int m, int t);
+		ECCLIB_API unsigned char* Encode(unsigned char* data);
+		ECCLIB_API unsigned char* Decode(unsigned char* data);
+
+		// Temporarily public for testing
+		ECCLIB_API unsigned char** ComputeSyndrome(unsigned char* data);
+		ECCLIB_API bool CheckSyndrome(unsigned char** syndrome);
+		ECCLIB_API unsigned char* ComputErrorLocationPolynomial(unsigned char** syndrome);
 	private:
 		BinaryMatrix* _generatormatrix;
+		GFMatrix* _paritycheckmatrix;
+		int t;
+		int m;
 	};
 }
 

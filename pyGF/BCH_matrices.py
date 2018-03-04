@@ -173,8 +173,8 @@ if __name__ == "__main__":
             gf6 = GaloisField(pp6)
             gp6 = BCH_generatorpoly(3, gf6)
             gm6 = BCH_generatormatrix(2**6 - 1, 2**6 - 1 - 18, gp6)
-            writegenmatrix(gm6, 'test6mat')
-            #rm = readgenmatrix("test6mat")
+            writegenmatrix(gm6, '63_45_matrix')
+            #rm = readgenmatrix("63_45_matrix")
             #print(True if np.array_equal(rm, gm6) else False)
         elif sys.argv[1] == "large" or sys.argv[1] == "12":
             pp12 = BinaryVector(12, 7185)
@@ -188,8 +188,8 @@ if __name__ == "__main__":
             pp6 = BinaryVector(6, 67)
             gf6 = GaloisField(pp6)
             H6 = BCH_paritycheckmatrix(gf6, 6, 3)
-            writeparitycheckmatrix(H6, 6, "pc6mat")
-            rm = readparitycheckmatrix("pc6mat")
+            writeparitycheckmatrix(H6, 6, "63_45_check_matrix")
+            rm = readparitycheckmatrix("63_45_check_matrix")
             print(rm)
             print(True if np.array_equal(rm, H6) else False)
         elif sys.argv[1] == "Hlarge" or sys.argv[1] == "H12":

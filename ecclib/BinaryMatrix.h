@@ -9,8 +9,6 @@
 #include <vector>
 #include <iostream>
 
-#pragma message("jjBinaryMatrix")
-
 namespace EccLib
 {
 	class BinaryMatrix
@@ -19,7 +17,7 @@ namespace EccLib
 		int rows;
 		int columns;
 
-		static ECCLIB_API BinaryMatrix Load(std::string file);
+		static ECCLIB_API BinaryMatrix* Load(std::string file);
 
 		ECCLIB_API unsigned char* MultiplyVector(unsigned char* data);
 		ECCLIB_API bool GetElement(int row, int column);
