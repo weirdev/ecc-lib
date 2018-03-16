@@ -3,11 +3,12 @@
 
 namespace EccLib
 {
-	GFMatrix::GFMatrix(int rows, int columns, int m)
+	GFMatrix::GFMatrix(int rows, int columns, int m, unsigned char* primpoly)
 	{
 		this->rows = rows;
 		this->columns = columns;
 		this->m = m;
+		this->primitive_polynomial = primpoly;
 
 		this->_elementbytes = (int)m / 8;
 		if (m % 8 != 0)
@@ -48,9 +49,17 @@ namespace EccLib
 		{
 			m = (m << 8) | buffer[idx];
 		}
-		GFMatrix* gfm = new GFMatrix(r, c, m);
 
-		idx = 12;
+		idx = 15;
+		unsigned char* primpoly = new unsigned char[4];
+		for (int i = 0; i < 4; i++)
+		{
+			primpoly[i] = buffer[idx - i];
+		}
+		
+		GFMatrix* gfm = new GFMatrix(r, c, m, primpoly);
+
+		idx = 16;
 		for (int i = 0; i < gfm->rows; i++)
 		{
 			for (int j = 0; j < gfm->columns*gfm->_elementbytes; j++)

@@ -17,6 +17,7 @@ namespace EccLib
 		int rows;
 		int columns;
 		int m;
+		unsigned char* primitive_polynomial;
 
 		static ECCLIB_API GFMatrix* Load(std::string file);
 
@@ -25,12 +26,11 @@ namespace EccLib
 		static ECCLIB_API bool ElementZero(unsigned char* element, int m);
 		
 	private:
-		GFMatrix(int rows, int columns, int m);
+		GFMatrix(int rows, int columns, int m, unsigned char* primpoly);
 
 		int _elementbytes;
 		unsigned char** _matrix;
 	};
 }
-
 
 #endif

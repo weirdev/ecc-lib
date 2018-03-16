@@ -10,11 +10,13 @@
 #define ECCLIB_H
 
 #include <string>
+#include <vector>
 
 namespace EccLib
 {
 	class BinaryMatrix;
 	class GFMatrix;
+	class GaloisField;
 
 	class Functions
 	{
@@ -33,12 +35,16 @@ namespace EccLib
 		// Temporarily public for testing
 		ECCLIB_API unsigned char** ComputeSyndrome(unsigned char* data);
 		ECCLIB_API bool CheckSyndrome(unsigned char** syndrome);
-		ECCLIB_API unsigned char* ComputErrorLocationPolynomial(unsigned char** syndrome);
+		ECCLIB_API std::vector<unsigned char*> ComputErrorLocationPolynomial(unsigned char** syndrome);
 	private:
 		BinaryMatrix* _generatormatrix;
 		GFMatrix* _paritycheckmatrix;
+		GaloisField* _gf;
 		int t;
 		int m;
+		int m_bytes;
+
+		std::vector<unsigned char*> SumGFPolynomials(std::vector<unsigned char*> p1, std::vector<unsigned char*> p2);
 	};
 }
 

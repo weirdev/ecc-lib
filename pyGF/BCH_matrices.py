@@ -8,6 +8,9 @@ import operator
 
 DEBUG = False
 
+GF6PP = 67
+GF12PP = 7185
+
 def minpolyrootvectterms(vector, gf):
     return conjugates(vector, gf)
 
@@ -126,7 +129,7 @@ def BCH_paritycheckmatrix(gf, m, t):
     
     return np.fromfunction(np.vectorize(H_fromlocation), (2*t, 2**m-1), dtype=BinaryVector)
 
-def writeparitycheckmatrix(matrix, m, filename):
+def writeparitycheckmatrix(matrix, m, primitive_poly, filename):
     def gfelementtobytes(e):
         byteremainder = (8 - (e.m+1) % 8) % 8
         bits = e.coeff + [0] * byteremainder
@@ -139,6 +142,9 @@ def writeparitycheckmatrix(matrix, m, filename):
         matrixfile.write(matrix.shape[1].to_bytes(4, byteorder='little'))
         # m = number of bits per matrix element
         matrixfile.write(m.to_bytes(4, byteorder='little'))
+        # number with bit positions representing coefficients of the primitive polynomial
+        # that generated the field whose elements make up the parity check matrix
+        matrixfile.write(primitive_poly.to_bytes(4, byteorder='little'))
 
         for row in matrix:
             for element in row:
@@ -157,6 +163,7 @@ def readparitycheckmatrix(filename):
         rows = int.from_bytes(matrixfile.read(4), byteorder='little')
         columns = int.from_bytes(matrixfile.read(4), byteorder='little')
         m = int.from_bytes(matrixfile.read(4), byteorder='little')
+        pp = int.from_bytes(matrixfile.read(4), byteorder='little')
         matrix = np.ndarray((rows, columns), BinaryVector)
 
         bytesperelement = (m + ((8 - m % 8) % 8)) // 8
@@ -169,7 +176,7 @@ def readparitycheckmatrix(filename):
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         if sys.argv[1] == "test" or sys.argv[1] == "6":
-            pp6 = BinaryVector(6, 67)
+            pp6 = BinaryVector(6, GF6PP)
             gf6 = GaloisField(pp6)
             gp6 = BCH_generatorpoly(3, gf6)
             gm6 = BCH_generatormatrix(2**6 - 1, 2**6 - 1 - 18, gp6)
@@ -177,7 +184,7 @@ if __name__ == "__main__":
             #rm = readgenmatrix("63_45_matrix")
             #print(True if np.array_equal(rm, gm6) else False)
         elif sys.argv[1] == "large" or sys.argv[1] == "12":
-            pp12 = BinaryVector(12, 7185)
+            pp12 = BinaryVector(12, GF12PP)
             gf12 = GaloisField(pp12)
             gp12 = BCH_generatorpoly(4, gf12)
             gm12 = BCH_generatormatrix(2**12 - 1, 2**12 - 1 - 48, gp12)
@@ -185,18 +192,18 @@ if __name__ == "__main__":
             #rm = readgenmatrix("4095_4047_matrix")
             #print(True if np.array_equal(rm, gm12) else False)
         elif sys.argv[1] == "Htest" or sys.argv[1] == "H6":
-            pp6 = BinaryVector(6, 67)
+            pp6 = BinaryVector(6, GF6PP)
             gf6 = GaloisField(pp6)
             H6 = BCH_paritycheckmatrix(gf6, 6, 3)
-            writeparitycheckmatrix(H6, 6, "63_45_check_matrix")
+            writeparitycheckmatrix(H6, 6, GF6PP, "63_45_check_matrix")
             rm = readparitycheckmatrix("63_45_check_matrix")
             print(rm)
             print(True if np.array_equal(rm, H6) else False)
         elif sys.argv[1] == "Hlarge" or sys.argv[1] == "H12":
-            pp12 = BinaryVector(12, 7185)
+            pp12 = BinaryVector(12, GF12PP)
             gf12 = GaloisField(pp12)
             H12 = BCH_paritycheckmatrix(gf12, 12, 4)
-            writeparitycheckmatrix(H12, 12, "4095_4047_check_matrix")
+            writeparitycheckmatrix(H12, 12, GF12PP, "4095_4047_check_matrix")
             rm = readparitycheckmatrix("4095_4047_check_matrix")
             print(True if np.array_equal(rm, H12) else False)
         else:
