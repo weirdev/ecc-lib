@@ -50,12 +50,17 @@ namespace EccLib
 			m = (m << 8) | buffer[idx];
 		}
 
-		idx = 15;
+		idx = 12;
 		unsigned char* primpoly = new unsigned char[4];
 		for (int i = 0; i < 4; i++)
 		{
-			primpoly[i] = buffer[idx - i];
+			primpoly[i] = buffer[idx + i];
 		}
+		for (int e = 0; e < 4; e++)
+		{
+			std::cout << std::hex << (int)primpoly[e];
+		}
+		std::cout << std::endl;
 		
 		GFMatrix* gfm = new GFMatrix(r, c, m, primpoly);
 

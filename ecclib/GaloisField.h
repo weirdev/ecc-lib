@@ -4,6 +4,9 @@
 #define GALOISFIELD_H
 
 #include <stdexcept>
+#include <string>
+#include <iostream>
+#include <vector>
 
 namespace EccLib
 {
@@ -14,9 +17,10 @@ namespace EccLib
 		unsigned char* MultiplyGFElements(unsigned char* e1, unsigned char* e2);
 		unsigned char* InvertGFElement(unsigned char* e);
 		bool GFElementsEqual(unsigned char* e1, unsigned char* e2);
-		unsigned char** GF;
+		std::vector<unsigned char*> GF;
+		std::string GFElementToStr(unsigned char* e);
 	private:
-		int* fieldpositions; // Int to int mapping of gfelements to their powers
+		std::vector<int> fieldpositions; // Int to int mapping of gfelements to their powers
 		int m;
 		int m_bytes;
 		unsigned char* LeftShiftGFElement(unsigned char* e);

@@ -11,6 +11,7 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
 
 namespace EccLib
 {
@@ -36,6 +37,7 @@ namespace EccLib
 		ECCLIB_API unsigned char** ComputeSyndrome(unsigned char* data);
 		ECCLIB_API bool CheckSyndrome(unsigned char** syndrome);
 		ECCLIB_API std::vector<unsigned char*> ComputErrorLocationPolynomial(unsigned char** syndrome);
+		ECCLIB_API std::string GFPolynomialToStr(std::vector<unsigned char*> p);
 	private:
 		BinaryMatrix* _generatormatrix;
 		GFMatrix* _paritycheckmatrix;

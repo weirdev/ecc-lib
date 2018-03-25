@@ -20,3 +20,4 @@ void test_matrix_encode();
 void testload_gfmatrix();
 void test_BCH_Encode();
 void test_BCH_Decode(bool small=true);
+unsigned char* standardnoise(unsigned char* v, int size);
