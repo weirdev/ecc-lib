@@ -7,7 +7,6 @@
 
 #include <stdexcept>
 #include <string>
-#include <iostream>
 #include <vector>
 
 namespace EccLib

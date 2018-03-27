@@ -56,11 +56,6 @@ namespace EccLib
 		{
 			primpoly[i] = buffer[idx + i];
 		}
-		for (int e = 0; e < 4; e++)
-		{
-			std::cout << std::hex << (int)primpoly[e];
-		}
-		std::cout << std::endl;
 		
 		GFMatrix* gfm = new GFMatrix(r, c, m, primpoly);
 
