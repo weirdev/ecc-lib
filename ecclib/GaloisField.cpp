@@ -50,6 +50,7 @@ namespace EccLib
 		for (int i = m + 2; i < elementcount; i++)
 		{
 			bool carry;
+			unsigned char last = this->GF[i - 1][0];
 			if (rem == 0)
 			{
 				carry = (this->GF[i - 1][m_bytes - 1] & 0x80) != 0;
@@ -61,10 +62,6 @@ namespace EccLib
 			this->GF.push_back(LeftShiftGFElement(this->GF[i - 1]));
 			if (carry)
 			{
-				if (rem != 0)
-				{
-					this->GF[i][m_bytes - 1] ^= (1 << rem);
-				}
 				for (int e = 0; e < m_bytes; e++)
 				{
 					this->GF[i][e] ^= this->GF[m + 1][e];
@@ -75,17 +72,18 @@ namespace EccLib
 	}
 	unsigned char* GaloisField::MultiplyGFElements(unsigned char * e1, unsigned char * e2)
 	{
-		int e1power = GFElementAsInt(e1) - 1;
-		int e2power = GFElementAsInt(e2) - 1;
+		int e1power = this->fieldpositions[GFElementAsInt(e1)] - 1;
+		//int e2power = GFElementAsInt(e2) - 1;
+		int e2power = this->fieldpositions[GFElementAsInt(e2)] - 1;
 		if (e1power == -1 || e2power == -1)
 		{
 			return GF[0];
 		}
-		return this->GF[((e1power + e2power) % (1 << m)) + 1];
+		return this->GF[(e1power + e2power) % ((1 << m) - 1) + 1];
 	}
 	unsigned char * GaloisField::InvertGFElement(unsigned char * e)
 	{
-		int epower = GFElementAsInt(e) - 1;
+		int epower = this->fieldpositions[GFElementAsInt(e)] - 1;
 		if (epower == -1)
 		{
 			throw std::invalid_argument("Cannot invert zero element");
@@ -94,8 +92,19 @@ namespace EccLib
 		{
 			return GF[1];
 		}
-		return this->GF[(1 << m) - epower + 1];
+		return this->GF[(1 << m) - epower];
 	}
+
+	unsigned char* GaloisField::GFElementPow(unsigned char* e, int p)
+	{
+		int epower = this->fieldpositions[GFElementAsInt(e)] - 1;
+		if (epower == -1)
+		{
+			return GF[0];
+		}
+		return this->GF[(p * epower) % ((1 << m) - 1) + 1];
+	}
+
 	unsigned char* GaloisField::LeftShiftGFElement(unsigned char* e)
 	{
 		unsigned char* shifte = new unsigned char[this->m_bytes];
@@ -119,7 +128,7 @@ namespace EccLib
 		int rem = m % 8;
 		if (rem != 0)
 		{
-			shifte[this->m_bytes - 1] &= (0xff ^ (1 << (rem - 1)));
+			shifte[this->m_bytes - 1] &= (0xff ^ (1 << rem));
 		}
 		return shifte;
 	}
@@ -150,11 +159,7 @@ namespace EccLib
 	std::string GaloisField::GFElementToStr(unsigned char* e)
 	{
 		std::string s = "";
-		std::cout << this->m_bytes << std::endl;
-		for (int i = 0; i < this->m_bytes; i++)
-		{
-			s += std::to_string((int)e[i]) + " ";
-		}
+		s += std::to_string(this->fieldpositions[GFElementAsInt(e)] - 1);
 		return s;
 	}
 }

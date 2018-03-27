@@ -10,6 +10,7 @@
 #include "ecclib.h"
 #include "BinaryMatrix.h"
 #include "GFMatrix.h"
+#include "GaloisField.h"
 
 int main();
 void testdummyencode();

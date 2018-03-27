@@ -36,17 +36,19 @@ namespace EccLib
 		// Temporarily public for testing
 		ECCLIB_API unsigned char** ComputeSyndrome(unsigned char* data);
 		ECCLIB_API bool CheckSyndrome(unsigned char** syndrome);
-		ECCLIB_API std::vector<unsigned char*> ComputErrorLocationPolynomial(unsigned char** syndrome);
+		ECCLIB_API std::vector<unsigned char*> ComputeErrorLocationPolynomial(unsigned char** syndrome);
 		ECCLIB_API std::string GFPolynomialToStr(std::vector<unsigned char*> p);
+
+		GaloisField* _gf;
 	private:
 		BinaryMatrix* _generatormatrix;
 		GFMatrix* _paritycheckmatrix;
-		GaloisField* _gf;
 		int t;
 		int m;
 		int m_bytes;
 
 		std::vector<unsigned char*> SumGFPolynomials(std::vector<unsigned char*> p1, std::vector<unsigned char*> p2);
+		bool CheckGFPolynomialRoot(std::vector<unsigned char*> poly, unsigned char* root);
 	};
 }
 
