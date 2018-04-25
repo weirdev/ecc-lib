@@ -98,6 +98,20 @@ def writegenmatrix(matrix, filename):
         for column in matrix.T:
             matrixfile.write(bytearray(bitlisttoint(column[bl*8:bl*8+8]) for bl in range(rows // 8)))
             # ###In column[bl*8:bl*8+8][::-1], the [::-1]
+
+def writememoryfile_genmatrix(matrix, filename):
+    with open(filename, 'wb') as matrixfile:
+        rows = matrix.shape[0]
+        byteremainder = 32 - (rows % 32)
+
+        if byteremainder != 32:
+            z = np.zeros((matrix.shape[0] + byteremainder, matrix.shape[1]), np.bool)
+            z[:-byteremainder,:] = matrix
+            matrix = z
+            rows += byteremainder
+        for column in matrix.T:
+            matrixfile.write(bytearray(bitlisttoint(column[bl*8:bl*8+8]) for bl in range(rows // 8)))
+            # ###In column[bl*8:bl*8+8][::-1], the [::-1]
         
 def readgenmatrix(filename):
     with open(filename, 'rb') as matrixfile:
@@ -180,9 +194,10 @@ if __name__ == "__main__":
             gf6 = GaloisField(pp6)
             gp6 = BCH_generatorpoly(3, gf6)
             gm6 = BCH_generatormatrix(2**6 - 1, 2**6 - 1 - 18, gp6)
+            print(gm6)
             writegenmatrix(gm6, '63_45_matrix')
-            #rm = readgenmatrix("63_45_matrix")
-            #print(True if np.array_equal(rm, gm6) else False)
+            rm = readgenmatrix("63_45_matrix")
+            print(True if np.array_equal(rm, gm6) else False)
         elif sys.argv[1] == "large" or sys.argv[1] == "12":
             pp12 = BinaryVector(12, GF12PP)
             gf12 = GaloisField(pp12)
@@ -206,6 +221,12 @@ if __name__ == "__main__":
             writeparitycheckmatrix(H12, 12, GF12PP, "4095_4047_check_matrix")
             rm = readparitycheckmatrix("4095_4047_check_matrix")
             print(True if np.array_equal(rm, H12) else False)
+        elif sys.argv[1] == "6mem":
+            pp6 = BinaryVector(6, GF6PP)
+            gf6 = GaloisField(pp6)
+            gp6 = BCH_generatorpoly(3, gf6)
+            gm6 = BCH_generatormatrix(2**6 - 1, 2**6 - 1 - 18, gp6)
+            writememoryfile_genmatrix(gm6, "63_45_matrix_memory")
         else:
             print("Unknown parameter name \"{}\"".format(sys.argv[1]))
     else:
