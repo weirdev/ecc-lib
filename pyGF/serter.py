@@ -1,4 +1,5 @@
-# File transfer terminal for sending data to Xilinx board over serial connection
+# Serial terminal for sending file and text data to Xilinx board 
+# (or any other device) over serial connection
 
 import time
 import serial
