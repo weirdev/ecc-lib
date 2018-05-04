@@ -227,6 +227,12 @@ if __name__ == "__main__":
             gp6 = BCH_generatorpoly(3, gf6)
             gm6 = BCH_generatormatrix(2**6 - 1, 2**6 - 1 - 18, gp6)
             writememoryfile_genmatrix(gm6, "63_45_matrix_memory")
+        elif sys.argv[1] == "12mem":
+            pp12 = BinaryVector(12, GF12PP)
+            gf12 = GaloisField(pp12)
+            gp12 = BCH_generatorpoly(4, gf12)
+            gm12 = BCH_generatormatrix(2**12 - 1, 2**12 - 1 - 48, gp12)
+            writememoryfile_genmatrix(gm12, '4095_4047_matrix_memory')
         else:
             print("Unknown parameter name \"{}\"".format(sys.argv[1]))
     else:
